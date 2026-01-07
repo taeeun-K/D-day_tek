@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D-Day Manager</title>
+
+<style>
+
+  @font-face {
+    font-family: 'MitmiFont';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2402_1@1.0/Ownglyph_meetme-Rg.woff2') format('woff2');
+    font-weight: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'OngleipKimkonghae';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408@1.0/Ownglyph_kimkonghae.woff2') format('woff2');
+    font-weight: normal;
+    font-display: swap;
+}
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#f4f6fb;font-family:'OngleipKimkonghae', Arial, Helvetica, sans-serif;display:flex;justify-content:center;padding:40px;}
+  .wrap{max-width:600px;width:100%;background:#fff;padding:25px;border-radius:18px;box-shadow:0 10px 20px rgba(0,0,0,0.1);}
+  h1{font-size:30px;margin-bottom:20px;text-align:center; font-family: 'MitmiFont'; letter-spacing: 1.6px;}
+
+  .add_box{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+  .add_box input{padding:10px;border:1px solid #ccc;border-radius:6px;flex:1;}
+  .add_box button{padding:10px 18px;border-radius:6px;border:0;background:#000;color:#fff;cursor:pointer;}
+
+  ul{margin-top:10px;}
+  li{display:flex;justify-content:space-between;align-items:center;
+    padding:12px;border-radius:10px;border:1px solid #ddd;
+    margin-bottom:10px;background:#fafafa;}
+
+  .info strong{font-size:16px;display:block;}
+  .info span{color:#777;font-size:14px;}
+
+  .dday{font-size:20px;font-weight:bold;}
+
+  button.delete{background:#ff4b4b;color:#fff;border:0;padding:7px 12px;border-radius:6px;cursor:pointer;}
+
+  @media(max-width:480px){
+    body{padding:15px;}
+    .wrap{padding:18px;}
+    .add_box{flex-direction:column;}
+  }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+  <h1>D-DAY LIST</h1>
+
+  <div class="add_box">
+    <input type="text" id="title" placeholder="이벤트 이름 입력하기!">
+    <input type="date" id="date">
+    <button onclick="add()">추가</button>
+  </div>
+
+  <ul id="list"></ul>
+</div>
+
+<script>
+  //date input 클릭시 달력오픈
+  const dateInput = document.getElementById("date");
+  dateInput.addEventListener("click", () => {
+    dateInput.showPicker();
+  });
+
+  //화면에 리스트가 렌더링 될 ul 요소를 가져와 ddayList 변수에 localStorage에서 불러온 d-day 배열을 저장.없으면 [] 빈배열로 초기화
+  const list = document.getElementById("list");
+  let ddayList = JSON.parse(localStorage.getItem("ddays")) || [];
+
+  //localStorage에 저장 함수
+  function save(){
+    localStorage.setItem("ddays", JSON.stringify(ddayList));
+  }
+
+  //D-day 계산 함수
+  function calc(target){
+    const today = new Date();
+    const day = new Date(target);
+
+    today.setHours(0,0,0,0);
+    day.setHours(0,0,0,0);
+
+    const diff = day - today;
+    const days = Math.floor(diff / (1000*60*60*24));
+
+    if(days > 0) return `D-${days}`;
+    if(days === 0) return "D-DAY 🎉";
+    return `D+${Math.abs(days)}`;
+  }
+
+  //화면 렌더링 함수
+  function render(){
+    list.innerHTML = "";
+    ddayList.forEach((item,index)=>{
+      const li = document.createElement("li");
+
+      li.innerHTML = `
+        <div class="info">
+          <strong>${item.title}</strong>
+          <span>${item.date}</span>
+        </div>
+
+        <div class="dday">${calc(item.date)}</div>
+
+        <button class="delete" onclick="remove(${index})">삭제</button>
+      `;
+
+      list.appendChild(li);
+    });
+  }
+
+  //d-day 추가 함수
+  function add(){
+    const title = document.getElementById("title");
+    const date = document.getElementById("date");
+
+    if(!title.value.trim()){
+      alert("이벤트 이름을 입력하세요");
+      return;
+    }
+
+    if(!date.value){
+      alert("날짜를 선택하세요");
+      return;
+    }
+
+    ddayList.push({
+      title: title.value,
+      date: date.value
+    });
+
+    title.value = "";
+    date.value = "";
+
+    //추가함수에서 저장,렌더링 함수 호출
+    save();
+    render();
+  }
+
+  //d-day 삭제 함수
+  function remove(index){
+    //confirm 에서 취소 선택시 함수종료
+    if(!confirm('디데이를 삭제할까요?')) return;
+
+    ddayList.splice(index,1);
+
+    //삭제함수에서 저장,렌더링 함수 호출
+    save();
+    render();
+  }
+
+  //초기 렌더링
+  render();
+</script>
+
+</body>
+</html>
